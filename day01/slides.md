@@ -121,7 +121,7 @@ spring.datasource.password=root
 
 # JPA / Hibernate
 spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
-spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 ```
 
@@ -131,7 +131,7 @@ spring.jpa.show-sql=true
 |----------|---------|
 | `spring.datasource.url` | JDBC URL to your MySQL database |
 | `spring.datasource.driver-class-name` | MySQL JDBC driver class |
-| `spring.jpa.hibernate.ddl-auto` | `create-drop` (dev), `update` (prod), `none` (manual) |
+| `spring.jpa.hibernate.ddl-auto` | `update` (adds new columns/tables), `create-drop` (wipes on restart), `none` (manual) |
 | `spring.jpa.show-sql` | Prints SQL to console for debugging |
 
 ---
@@ -302,12 +302,14 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        carRepository.save(new Car("Toyota", "Camry", 2023, "Silver", 28000));
-        carRepository.save(new Car("Honda", "Civic", 2022, "Blue", 24000));
-        carRepository.save(new Car("Ford", "Mustang", 2024, "Red", 45000));
-
-        System.out.println("=== All Cars ===");
-        carRepository.findAll().forEach(System.out::println);
+        if (carRepository.count() == 0) {
+            carRepository.save(new Car("Toyota", "Camry", 2023, "Silver", 28000));
+            carRepository.save(new Car("Honda", "Civic", 2022, "Blue", 24000));
+            carRepository.save(new Car("Ford", "Mustang", 2024, "Red", 45000));
+            System.out.println("=== Seeded " + carRepository.count() + " cars ===");
+        } else {
+            System.out.println("=== Database already has " + carRepository.count() + " cars — skipping seed ===");
+        }
     }
 }
 ```

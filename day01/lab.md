@@ -51,7 +51,7 @@ spring.datasource.password=root
 
 # JPA settings
 spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
-spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.hibernate.ddl-auto=update
 spring.jpa.show-sql=true
 ```
 
@@ -177,17 +177,16 @@ public class DataLoader implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        // Save some cars
-        carRepository.save(new Car("Toyota", "Camry", 2023, "Silver", 28000));
-        carRepository.save(new Car("Honda", "Civic", 2022, "Blue", 24000));
-        carRepository.save(new Car("Ford", "Mustang", 2024, "Red", 45000));
-        carRepository.save(new Car("Tesla", "Model 3", 2024, "White", 42000));
-        carRepository.save(new Car("BMW", "330i", 2023, "Black", 46000));
-
-        // Print all cars
-        System.out.println("\n=== All Cars in Database ===");
-        carRepository.findAll().forEach(System.out::println);
-        System.out.println("Total cars: " + carRepository.count());
+        if (carRepository.count() == 0) {
+            carRepository.save(new Car("Toyota", "Camry", 2023, "Silver", 28000));
+            carRepository.save(new Car("Honda", "Civic", 2022, "Blue", 24000));
+            carRepository.save(new Car("Ford", "Mustang", 2024, "Red", 45000));
+            carRepository.save(new Car("Tesla", "Model 3", 2024, "White", 42000));
+            carRepository.save(new Car("BMW", "330i", 2023, "Black", 46000));
+            System.out.println("\n=== Seeded " + carRepository.count() + " cars ===");
+        } else {
+            System.out.println("\n=== Database already has " + carRepository.count() + " cars — skipping seed ===");
+        }
     }
 }
 ```

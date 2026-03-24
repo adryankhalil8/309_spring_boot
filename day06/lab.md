@@ -365,25 +365,31 @@ public CarResponse assignOwner(Long carId, Long ownerId) {
 
 ## Part 6: Seed and Test (10 min)
 
-Update `DataLoader` to create owners and assign cars:
+Update `DataLoader` to create owners and assign cars (add the guard so it only seeds once):
 
 ```java
-// Create owners
-Owner john = ownerRepository.save(new Owner("John", "Smith", "john@example.com", "555-0100"));
-Owner jane = ownerRepository.save(new Owner("Jane", "Doe", "jane@example.com", "555-0200"));
+if (carRepository.count() == 0) {
+    // Create owners
+    Owner john = ownerRepository.save(new Owner("John", "Smith", "john@example.com", "555-0100"));
+    Owner jane = ownerRepository.save(new Owner("Jane", "Doe", "jane@example.com", "555-0200"));
 
-// Create cars with owners
-Car car1 = new Car("Toyota", "Camry", 2023, "Silver", 28000);
-car1.setOwner(john);
-carRepository.save(car1);
+    // Create cars with owners
+    Car car1 = new Car("Toyota", "Camry", 2023, "Silver", 28000);
+    car1.setOwner(john);
+    carRepository.save(car1);
 
-Car car2 = new Car("Honda", "Civic", 2022, "Blue", 24000);
-car2.setOwner(john);
-carRepository.save(car2);
+    Car car2 = new Car("Honda", "Civic", 2022, "Blue", 24000);
+    car2.setOwner(john);
+    carRepository.save(car2);
 
-Car car3 = new Car("Ford", "Mustang", 2024, "Red", 45000);
-car3.setOwner(jane);
-carRepository.save(car3);
+    Car car3 = new Car("Ford", "Mustang", 2024, "Red", 45000);
+    car3.setOwner(jane);
+    carRepository.save(car3);
+
+    System.out.println("=== Seeded " + carRepository.count() + " cars and " + ownerRepository.count() + " owners ===");
+} else {
+    System.out.println("=== Database already seeded — skipping ===");
+}
 ```
 
 ### Test
