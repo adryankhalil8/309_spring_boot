@@ -1,7 +1,7 @@
 package com.example.cardealership.controller;
 
 import com.example.cardealership.entity.Car;
-import com.example.cardealership.repository.CarRepository;
+import com.example.cardealership.service.CarService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,57 +12,38 @@ import java.util.List;
 @RequestMapping("/api/cars")
 public class CarController {
 
-    private final CarRepository carRepository;
+    private final CarService carService;
 
-    public CarController(CarRepository carRepository) {
-        this.carRepository = carRepository;
+    public CarController(CarService carService) {
+        this.carService = carService;
     }
 
-    // GET all cars
     @GetMapping
     public List<Car> getAllCars() {
-        return carRepository.findAll();
+        return carService.getAllCars();
     }
 
-    // GET car by ID
     @GetMapping("/{id}")
     public ResponseEntity<Car> getCarById(@PathVariable Long id) {
-        return carRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+        Car car = carService.getCarById(id);
+        return ResponseEntity.ok(car);
     }
 
-    // POST create car
     @PostMapping
     public ResponseEntity<Car> createCar(@RequestBody Car car) {
-        Car saved = carRepository.save(car);
+        Car saved = carService.createCar(car);
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
-    // PUT update car
+
     @PutMapping("/{id}")
     public ResponseEntity<Car> updateCar(@PathVariable Long id, @RequestBody Car carDetails) {
-        return carRepository.findById(id)
-                .map(car -> {
-                    car.setMake(carDetails.getMake());
-                    car.setModel(carDetails.getModel());
-                    car.setYear(carDetails.getYear());
-                    car.setColor(carDetails.getColor());
-                    car.setPrice(carDetails.getPrice());
-                    return ResponseEntity.ok(carRepository.save(car));
-                })
-                .orElse(ResponseEntity.notFound().build());
+        Car updated = carService.updateCar(id, carDetails);
+        return ResponseEntity.ok(updated);
     }
-    // DELETE car
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCar(@PathVariable Long id) {
-        if (carRepository.existsById(id)) {
-            carRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
-    }
-    @GetMapping("/search")
-    public List<Car> searchByMake(@RequestParam String make) {
-        return carRepository.findByMake(make);
+        carService.deleteCar(id);
+        return ResponseEntity.noContent().build();
     }
 }
