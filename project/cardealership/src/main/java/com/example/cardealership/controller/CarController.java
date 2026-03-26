@@ -1,7 +1,9 @@
 package com.example.cardealership.controller;
 
-import com.example.cardealership.entity.Car;
+import com.example.cardealership.dto.CarRequest;
+import com.example.cardealership.dto.CarResponse;
 import com.example.cardealership.service.CarService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,26 +21,29 @@ public class CarController {
     }
 
     @GetMapping
-    public List<Car> getAllCars() {
+    public List<CarResponse> getAllCars() {
         return carService.getAllCars();
     }
 
+    @GetMapping("/search")
+    public List<CarResponse> searchByMake(@RequestParam String make) {
+        return carService.searchCarsByMake(make);
+    }
+
     @GetMapping("/{id}")
-    public ResponseEntity<Car> getCarById(@PathVariable Long id) {
-        Car car = carService.getCarById(id);
-        return ResponseEntity.ok(car);
+    public ResponseEntity<CarResponse> getCarById(@PathVariable Long id) {
+        return ResponseEntity.ok(carService.getCarById(id));
     }
 
     @PostMapping
-    public ResponseEntity<Car> createCar(@RequestBody Car car) {
-        Car saved = carService.createCar(car);
-        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
+    public ResponseEntity<CarResponse> createCar(@Valid @RequestBody CarRequest request) {
+        CarResponse response = carService.createCar(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Car> updateCar(@PathVariable Long id, @RequestBody Car carDetails) {
-        Car updated = carService.updateCar(id, carDetails);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<CarResponse> updateCar(@PathVariable Long id, @Valid @RequestBody CarRequest request) {
+        return ResponseEntity.ok(carService.updateCar(id, request));
     }
 
     @DeleteMapping("/{id}")

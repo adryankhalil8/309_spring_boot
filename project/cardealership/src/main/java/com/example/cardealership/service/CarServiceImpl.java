@@ -1,6 +1,9 @@
 package com.example.cardealership.service;
 
+import com.example.cardealership.dto.CarRequest;
+import com.example.cardealership.dto.CarResponse;
 import com.example.cardealership.entity.Car;
+import com.example.cardealership.mapper.CarMapper;
 import com.example.cardealership.repository.CarRepository;
 import org.springframework.stereotype.Service;
 
@@ -10,52 +13,56 @@ import java.util.List;
 public class CarServiceImpl implements CarService {
 
     private final CarRepository carRepository;
+    private final CarMapper carMapper;
 
-    public CarServiceImpl(CarRepository carRepository) {
+    public CarServiceImpl(CarRepository carRepository, CarMapper carMapper) {
         this.carRepository = carRepository;
+        this.carMapper = carMapper;
     }
 
     @Override
-    public List<Car> getAllCars() {
-        return carRepository.findAll();
+    public List<CarResponse> getAllCars() {
+        return carRepository.findAll()
+                .stream()
+                .map(carMapper::toResponse)
+                .toList();
     }
 
     @Override
-    public Car getCarById(Long id) {
-        return carRepository.findById(id)
+    public List<CarResponse> searchCarsByMake(String make) {
+        return carRepository.findByMake(make)
+                .stream()
+                .map(carMapper::toResponse)
+                .toList();
+    }
+
+    @Override
+    public CarResponse getCarById(Long id) {
+        Car car = carRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Car not found with id: " + id));
+        return carMapper.toResponse(car);
     }
 
     @Override
-    public Car createCar(Car car) {
-        // Business rule: price must be positive
-        if (car.getPrice() <= 0) {
-            throw new IllegalArgumentException("Price must be greater than zero");
-        }
-
-        // Business rule: year must be valid
-        int currentYear = java.time.Year.now().getValue();
-        if (car.getYear() < 1886 || car.getYear() > currentYear + 1) {
-            throw new IllegalArgumentException("Year must be between 1886 and " + (currentYear + 1));
-        }
-
-        return carRepository.save(car);
+    public CarResponse createCar(CarRequest request) {
+        Car car = carMapper.toEntity(request);
+        Car saved = carRepository.save(car);
+        return carMapper.toResponse(saved);
     }
 
     @Override
-    public Car updateCar(Long id, Car carDetails) {
-        Car car = getCarById(id);
-        car.setMake(carDetails.getMake());
-        car.setModel(carDetails.getModel());
-        car.setYear(carDetails.getYear());
-        car.setColor(carDetails.getColor());
-        car.setPrice(carDetails.getPrice());
-        return carRepository.save(car);
+    public CarResponse updateCar(Long id, CarRequest request) {
+        Car car = carRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Car not found with id: " + id));
+        carMapper.updateEntity(car, request);
+        Car updated = carRepository.save(car);
+        return carMapper.toResponse(updated);
     }
 
     @Override
     public void deleteCar(Long id) {
-        Car car = getCarById(id);
+        Car car = carRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Car not found with id: " + id));
         carRepository.delete(car);
     }
 }

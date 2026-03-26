@@ -1,11 +1,13 @@
 package com.example.cardealership.service;
 
+import com.example.cardealership.dto.CarRequest;
+import com.example.cardealership.dto.CarResponse;
 import com.example.cardealership.entity.Car;
+import com.example.cardealership.mapper.CarMapper;
 import com.example.cardealership.repository.CarRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -22,36 +24,47 @@ class CarServiceImplTest {
     @Mock
     private CarRepository carRepository;
 
-    @InjectMocks
     private CarServiceImpl carService;
 
     private Car sampleCar;
+    private CarRequest sampleRequest;
 
     @BeforeEach
     void setUp() {
+        carService = new CarServiceImpl(carRepository, new CarMapper());
         sampleCar = new Car("Toyota", "Camry", 2023, "Silver", 28000);
         sampleCar.setId(1L);
+        sampleRequest = new CarRequest("Toyota", "Camry", 2023, "Silver", 28000);
     }
 
     @Test
     void getAllCars_returnsList() {
-        // Arrange
         List<Car> cars = Arrays.asList(sampleCar, new Car("Honda", "Civic", 2022, "Blue", 24000));
         when(carRepository.findAll()).thenReturn(cars);
 
-        // Act
-        List<Car> result = carService.getAllCars();
+        List<CarResponse> result = carService.getAllCars();
 
-        // Assert
         assertEquals(2, result.size());
+        assertEquals("Toyota", result.get(0).getMake());
         verify(carRepository, times(1)).findAll();
+    }
+
+    @Test
+    void searchCarsByMake_returnsMatches() {
+        when(carRepository.findByMake("Toyota")).thenReturn(List.of(sampleCar));
+
+        List<CarResponse> result = carService.searchCarsByMake("Toyota");
+
+        assertEquals(1, result.size());
+        assertEquals("Toyota", result.get(0).getMake());
+        verify(carRepository).findByMake("Toyota");
     }
 
     @Test
     void getCarById_found() {
         when(carRepository.findById(1L)).thenReturn(Optional.of(sampleCar));
 
-        Car result = carService.getCarById(1L);
+        CarResponse result = carService.getCarById(1L);
 
         assertEquals("Toyota", result.getMake());
         assertEquals("Camry", result.getModel());
@@ -68,27 +81,28 @@ class CarServiceImplTest {
     void createCar_validCar_saves() {
         when(carRepository.save(any(Car.class))).thenReturn(sampleCar);
 
-        Car result = carService.createCar(sampleCar);
+        CarResponse result = carService.createCar(sampleRequest);
 
         assertNotNull(result);
         assertEquals("Toyota", result.getMake());
+        verify(carRepository).save(any(Car.class));
+    }
+
+    @Test
+    void updateCar_found_updatesAndReturnsResponse() {
+        CarRequest updatedRequest = new CarRequest("Toyota", "Camry", 2025, "Midnight Blue", 32000);
+        Car updatedCar = new Car("Toyota", "Camry", 2025, "Midnight Blue", 32000);
+        updatedCar.setId(1L);
+
+        when(carRepository.findById(1L)).thenReturn(Optional.of(sampleCar));
+        when(carRepository.save(sampleCar)).thenReturn(updatedCar);
+
+        CarResponse result = carService.updateCar(1L, updatedRequest);
+
+        assertEquals(2025, result.getYear());
+        assertEquals("Midnight Blue", result.getColor());
+        assertEquals(32000, result.getPrice());
         verify(carRepository).save(sampleCar);
-    }
-
-    @Test
-    void createCar_negativePrice_throwsException() {
-        Car badCar = new Car("Test", "Car", 2023, "Red", -5000);
-
-        assertThrows(IllegalArgumentException.class, () -> carService.createCar(badCar));
-        verify(carRepository, never()).save(any());
-    }
-
-    @Test
-    void createCar_invalidYear_throwsException() {
-        Car badCar = new Car("Test", "Car", 1800, "Red", 25000);
-
-        assertThrows(IllegalArgumentException.class, () -> carService.createCar(badCar));
-        verify(carRepository, never()).save(any());
     }
 
     @Test
