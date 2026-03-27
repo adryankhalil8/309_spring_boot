@@ -11,6 +11,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,26 +45,42 @@ class CarServiceImplTest {
     }
 
     @Test
-    void getAllCars_returnsList() {
+    void getAllCars_returnsPage() {
         List<Car> cars = Arrays.asList(sampleCar, new Car("Honda", "Civic", 2022, "Blue", 24000));
-        when(carRepository.findAll()).thenReturn(cars);
+        Page<Car> carPage = new PageImpl<>(cars, PageRequest.of(0, 2), cars.size());
+        when(carRepository.findAll(PageRequest.of(0, 2, org.springframework.data.domain.Sort.by("id").ascending())))
+                .thenReturn(carPage);
 
-        List<CarResponse> result = carService.getAllCars();
+        Page<CarResponse> result = carService.getAllCars(0, 2, "id", "asc");
 
-        assertEquals(2, result.size());
-        assertEquals("Toyota", result.get(0).getMake());
-        verify(carRepository, times(1)).findAll();
+        assertEquals(2, result.getContent().size());
+        assertEquals("Toyota", result.getContent().get(0).getMake());
+        assertEquals(2, result.getTotalElements());
+        verify(carRepository, times(1))
+                .findAll(PageRequest.of(0, 2, org.springframework.data.domain.Sort.by("id").ascending()));
     }
 
     @Test
-    void searchCarsByMake_returnsMatches() {
-        when(carRepository.findByMake("Toyota")).thenReturn(List.of(sampleCar));
+    void searchCars_returnsMatches() {
+        when(carRepository.searchByKeyword("toy")).thenReturn(List.of(sampleCar));
 
-        List<CarResponse> result = carService.searchCarsByMake("Toyota");
+        List<CarResponse> result = carService.searchCars("toy");
 
         assertEquals(1, result.size());
         assertEquals("Toyota", result.get(0).getMake());
-        verify(carRepository).findByMake("Toyota");
+        verify(carRepository).searchByKeyword("toy");
+    }
+
+    @Test
+    void filterCars_returnsMatches() {
+        when(carRepository.filterCars("Toyota", "Silver", 2023, 2024, 25000.0, 30000.0))
+                .thenReturn(List.of(sampleCar));
+
+        List<CarResponse> result = carService.filterCars("Toyota", "Silver", 2023, 2024, 25000.0, 30000.0);
+
+        assertEquals(1, result.size());
+        assertEquals("Camry", result.get(0).getModel());
+        verify(carRepository).filterCars("Toyota", "Silver", 2023, 2024, 25000.0, 30000.0);
     }
 
     @Test

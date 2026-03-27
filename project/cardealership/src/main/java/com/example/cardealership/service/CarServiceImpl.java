@@ -8,6 +8,10 @@ import com.example.cardealership.exception.ResourceNotFoundException;
 import com.example.cardealership.mapper.CarMapper;
 import com.example.cardealership.repository.CarRepository;
 import com.example.cardealership.repository.OwnerRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,16 +30,29 @@ public class CarServiceImpl implements CarService {
     }
 
     @Override
-    public List<CarResponse> getAllCars() {
-        return carRepository.findAll()
+    public Page<CarResponse> getAllCars(int page, int size, String sortBy, String direction) {
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return carRepository.findAll(pageable)
+                .map(carMapper::toResponse);
+    }
+
+    @Override
+    public List<CarResponse> searchCars(String keyword) {
+        return carRepository.searchByKeyword(keyword)
                 .stream()
                 .map(carMapper::toResponse)
                 .toList();
     }
 
     @Override
-    public List<CarResponse> searchCarsByMake(String make) {
-        return carRepository.findByMake(make)
+    public List<CarResponse> filterCars(String make, String color, Integer minYear, Integer maxYear,
+                                        Double minPrice, Double maxPrice) {
+        return carRepository.filterCars(make, color, minYear, maxYear, minPrice, maxPrice)
                 .stream()
                 .map(carMapper::toResponse)
                 .toList();
@@ -70,6 +87,7 @@ public class CarServiceImpl implements CarService {
                 .orElseThrow(() -> new ResourceNotFoundException("Car", id));
         carRepository.delete(car);
     }
+
     @Override
     public CarResponse assignOwner(Long carId, Long ownerId) {
         Car car = carRepository.findById(carId)

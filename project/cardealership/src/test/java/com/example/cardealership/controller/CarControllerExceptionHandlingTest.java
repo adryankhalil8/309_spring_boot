@@ -64,7 +64,7 @@ class CarControllerExceptionHandlingTest {
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Validation Failed"))
                 .andExpect(jsonPath("$.message").value("One or more fields are invalid"))
-                .andExpect(jsonPath("$.fieldErrors.make").value("Make is required"))
+                .andExpect(jsonPath("$.fieldErrors.make").value("Make must be between 2 and 50 characters"))
                 .andExpect(jsonPath("$.fieldErrors.color").value("Color is required"))
                 .andExpect(jsonPath("$.fieldErrors.price").value("Price must be greater than zero"))
                 .andExpect(jsonPath("$.timestamp").exists());
