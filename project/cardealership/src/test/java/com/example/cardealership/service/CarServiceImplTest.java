@@ -5,6 +5,7 @@ import com.example.cardealership.dto.CarResponse;
 import com.example.cardealership.entity.Car;
 import com.example.cardealership.mapper.CarMapper;
 import com.example.cardealership.repository.CarRepository;
+import com.example.cardealership.repository.OwnerRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +25,9 @@ class CarServiceImplTest {
     @Mock
     private CarRepository carRepository;
 
+    @Mock
+    private OwnerRepository ownerRepository;
+
     private CarServiceImpl carService;
 
     private Car sampleCar;
@@ -31,7 +35,7 @@ class CarServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        carService = new CarServiceImpl(carRepository, new CarMapper());
+        carService = new CarServiceImpl(carRepository, new CarMapper(), ownerRepository);
         sampleCar = new Car("Toyota", "Camry", 2023, "Silver", 28000);
         sampleCar.setId(1L);
         sampleRequest = new CarRequest("Toyota", "Camry", 2023, "Silver", 28000);

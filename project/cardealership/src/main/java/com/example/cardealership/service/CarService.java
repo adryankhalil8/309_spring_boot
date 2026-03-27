@@ -11,4 +11,5 @@ public interface CarService {
     CarResponse createCar(CarRequest request);
     CarResponse updateCar(Long id, CarRequest request);
     void deleteCar(Long id);
+    CarResponse assignOwner(Long carId, Long ownerId);
 }

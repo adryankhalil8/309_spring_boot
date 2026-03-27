@@ -3,8 +3,11 @@ package com.example.cardealership.service;
 import com.example.cardealership.dto.CarRequest;
 import com.example.cardealership.dto.CarResponse;
 import com.example.cardealership.entity.Car;
+import com.example.cardealership.entity.Owner;
+import com.example.cardealership.exception.ResourceNotFoundException;
 import com.example.cardealership.mapper.CarMapper;
 import com.example.cardealership.repository.CarRepository;
+import com.example.cardealership.repository.OwnerRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -14,10 +17,12 @@ public class CarServiceImpl implements CarService {
 
     private final CarRepository carRepository;
     private final CarMapper carMapper;
+    private final OwnerRepository ownerRepository;
 
-    public CarServiceImpl(CarRepository carRepository, CarMapper carMapper) {
+    public CarServiceImpl(CarRepository carRepository, CarMapper carMapper, OwnerRepository ownerRepository) {
         this.carRepository = carRepository;
         this.carMapper = carMapper;
+        this.ownerRepository = ownerRepository;
     }
 
     @Override
@@ -39,9 +44,10 @@ public class CarServiceImpl implements CarService {
     @Override
     public CarResponse getCarById(Long id) {
         Car car = carRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Car not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Car", id));
         return carMapper.toResponse(car);
     }
+
 
     @Override
     public CarResponse createCar(CarRequest request) {
@@ -53,16 +59,25 @@ public class CarServiceImpl implements CarService {
     @Override
     public CarResponse updateCar(Long id, CarRequest request) {
         Car car = carRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Car not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Car", id));
         carMapper.updateEntity(car, request);
-        Car updated = carRepository.save(car);
-        return carMapper.toResponse(updated);
+        return carMapper.toResponse(carRepository.save(car));
     }
 
     @Override
     public void deleteCar(Long id) {
         Car car = carRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Car not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Car", id));
         carRepository.delete(car);
+    }
+    @Override
+    public CarResponse assignOwner(Long carId, Long ownerId) {
+        Car car = carRepository.findById(carId)
+                .orElseThrow(() -> new ResourceNotFoundException("Car", carId));
+        Owner owner = ownerRepository.findById(ownerId)
+                .orElseThrow(() -> new ResourceNotFoundException("Owner", ownerId));
+        car.setOwner(owner);
+        Car saved = carRepository.save(car);
+        return carMapper.toResponse(saved);
     }
 }
