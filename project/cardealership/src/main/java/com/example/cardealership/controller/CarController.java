@@ -4,6 +4,7 @@ import com.example.cardealership.dto.CarRequest;
 import com.example.cardealership.dto.CarResponse;
 import com.example.cardealership.service.CarService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -21,20 +22,33 @@ public class CarController {
     }
 
     @GetMapping
-    public List<CarResponse> getAllCars() {
-        return carService.getAllCars();
+    public Page<CarResponse> getAllCars(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction) {
+        return carService.getAllCars(page, size, sortBy, direction);
     }
 
     @GetMapping("/search")
-    public List<CarResponse> searchByMake(@RequestParam String make) {
-        return carService.searchCarsByMake(make);
+    public List<CarResponse> search(@RequestParam String q) {
+        return carService.searchCars(q);
+    }
+
+    @GetMapping("/filter")
+    public List<CarResponse> filterCars(
+            @RequestParam(required = false) String make,
+            @RequestParam(required = false) String color,
+            @RequestParam(required = false) Integer minYear,
+            @RequestParam(required = false) Integer maxYear,
+            @RequestParam(required = false) Double minPrice,
+            @RequestParam(required = false) Double maxPrice) {
+        return carService.filterCars(make, color, minYear, maxYear, minPrice, maxPrice);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CarResponse> getCarById(@PathVariable Long id) {
         return ResponseEntity.ok(carService.getCarById(id));
-        // If not found, service throws ResourceNotFoundException
-        // GlobalExceptionHandler catches it → returns 404
     }
 
     @PostMapping
@@ -53,6 +67,7 @@ public class CarController {
         carService.deleteCar(id);
         return ResponseEntity.noContent().build();
     }
+
     @PutMapping("/{carId}/owner/{ownerId}")
     public ResponseEntity<CarResponse> assignOwner(
             @PathVariable Long carId,
@@ -60,5 +75,4 @@ public class CarController {
         CarResponse response = carService.assignOwner(carId, ownerId);
         return ResponseEntity.ok(response);
     }
-
 }
