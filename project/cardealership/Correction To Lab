@@ -1,0 +1,21 @@
+Completed the Day 6 lab in project/cardealership and verified it with mvn test from pom.xml. The owner relationship flow is now in place: Owner entity/DTOs/mapper/repository/service, the owner API controller at OwnerController.java, the car-to-owner assignment endpoint already wired through CarController.java, and seed data updated in DataLoader.java.
+
+A couple of changes I made that go beyond the exact lab text:
+
+I added @Transactional(readOnly = true) to the owner read methods in OwnerServiceImpl.java so returning nested cars is reliable and doesn’t depend on lazy-loading behavior outside the service layer.
+I updated the existing unit test setup in CarServiceImplTest.java because CarServiceImpl now needs OwnerRepository injected.
+There was already an incorrectly named OwnerClass.java; I preserved that work and fixed it into the proper controller file name so the project compiles.
+
+Completed the Day 7 lab in project/cardealership.
+
+The required Day 7 pieces are in place:
+
+Standard error DTOs in ErrorResponse.java and ValidationErrorResponse.java
+Custom not-found exception in ResourceNotFoundException.java
+Global handler in GlobalExceptionHandler.java
+Services updated to throw ResourceNotFoundException in CarServiceImpl.java and OwnerServiceImpl.java
+Old ValidationExceptionHandler removed
+Extra changes I made beyond the lab handout:
+
+I updated assignOwner in CarServiceImpl.java to use ResourceNotFoundException too, so Day 7 handling is consistent there as well.
+I added automated controller tests in CarControllerExceptionHandlingTest.java to verify the five Day 7 scenarios without needing a live DB.

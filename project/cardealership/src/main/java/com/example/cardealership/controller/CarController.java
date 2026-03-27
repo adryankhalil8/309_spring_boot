@@ -33,6 +33,8 @@ public class CarController {
     @GetMapping("/{id}")
     public ResponseEntity<CarResponse> getCarById(@PathVariable Long id) {
         return ResponseEntity.ok(carService.getCarById(id));
+        // If not found, service throws ResourceNotFoundException
+        // GlobalExceptionHandler catches it → returns 404
     }
 
     @PostMapping
@@ -51,4 +53,12 @@ public class CarController {
         carService.deleteCar(id);
         return ResponseEntity.noContent().build();
     }
+    @PutMapping("/{carId}/owner/{ownerId}")
+    public ResponseEntity<CarResponse> assignOwner(
+            @PathVariable Long carId,
+            @PathVariable Long ownerId) {
+        CarResponse response = carService.assignOwner(carId, ownerId);
+        return ResponseEntity.ok(response);
+    }
+
 }
